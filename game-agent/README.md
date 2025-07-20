@@ -30,11 +30,10 @@ The **Game Assistant Agent** is a multi-agent AI that creates immersive fantasy 
 
 ## 📦 Installation
 
-1. **Clone the Repository**:
+1. **Install dependencies**:
 
    ```bash
-   git clone https://github.com/your-repo/game-assistant-agent.git
-   cd game-assistant-agent
+   uv add chainit openai-agents python-dotenv
    ```
 
 2. **Set Up Environment**:
