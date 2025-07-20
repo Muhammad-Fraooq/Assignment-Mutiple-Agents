@@ -30,11 +30,10 @@ The **AI Travel Designer Assistant** is a multi-agent AI that crafts personalize
 
 ## 📦 Installation
 
-1. **Clone the Repository**:
+1. **Install dependencies**:
 
    ```bash
-   git clone https://github.com/your-repo/ai-travel-designer.git
-   cd ai-travel-designer
+   uv add chainit openai-agents python-dotenv
    ```
 
 2. **Set Up Environment**:
