@@ -175,7 +175,7 @@ async def main(message:cl.Message):
         full_response : str = ""
         async for event in result.stream_events():
             if event.type == "raw_response_event" and hasattr(event.data,"delta"):
-                token = cast(str,event.data.delta)
+                token = cast(str,event.data.delta) # type: ignore
                 if token:
                     full_response += token
                     msg.content = full_response
