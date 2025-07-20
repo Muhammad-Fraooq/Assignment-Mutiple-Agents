@@ -30,11 +30,10 @@ The **Career Mentor Agent** is a multi-agent AI system that guides users in disc
 
 ## 📦 Installation
 
-1. **Clone the Repository**:
+1. **Install dependencies**:
 
    ```bash
-   git clone https://github.com/your-repo/career-mentor-agent.git
-   cd career-mentor-agent
+   uv add chainit openai-agents python-dotenv
    ```
 
 2. **Set Up Environment**:
