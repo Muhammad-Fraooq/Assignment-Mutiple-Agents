@@ -17,29 +17,25 @@ BASE_URL = os.getenv("BASE_URL")
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY not set in .env")
 
-# Gemini model provider
-class GeminiModelProvider(ModelProvider):
-    def __init__(self, api_key, model_name):
-        super().__init__()
-        self.api_key = api_key
-        self.model_name = model_name
-        self.client = AsyncOpenAI(
-                api_key=api_key,
-                base_url=BASE_URL
-        )
-    def get_model(self, model_name="gemini-2.0-flash"):
-        return OpenAIChatCompletionsModel(
-                model=self.model_name,
-                openai_client=self.client
-        )
-
-model_provider = GeminiModelProvider(api_key=GEMINI_API_KEY,model_name="gemini-2.0-flash")
-
-# Model config
-config = RunConfig(model=model_provider.get_model(),model_provider=model_provider,tracing_disabled=True)
-
+# Start chainlit app
 @cl.on_chat_start
 async def on_chat_start():
+
+     # Reference: https://ai.google.dev/gemini-api/docs/openai
+    external_client = AsyncOpenAI(
+        api_key=GEMINI_API_KEY,
+        base_url=BASE_URL,
+    )
+
+    model = OpenAIChatCompletionsModel(
+        model="gemini-2.0-flash", openai_client=external_client
+    )
+
+    config = RunConfig(
+        model=model,
+        model_provider=external_client, # type: ignore
+        tracing_disabled=True 
+    )
 
     @function_tool
     def roll_dice(sides: int = 6) -> int:
@@ -66,7 +62,7 @@ async def on_chat_start():
         name="Narrator Agent",
         instructions=narrator_prompt,
         handoff_description="Narrates story scenes and drives game progress",
-        model=model_provider.get_model(),
+        model=model,
         tools=[roll_dice, generate_event]
     )
 
@@ -74,21 +70,21 @@ async def on_chat_start():
     name="Monster Agent",
     instructions=monstor_prompt,
     handoff_description="Handles combat encounters and enemy logic",
-    model=model_provider.get_model(),
+    model=model,
 )
 
     item_agent = Agent(
     name="Item Agent",
     instructions=item_prompt,
     handoff_description="Manages rewards and player inventory",
-    model=model_provider.get_model(),
+    model=model,
 )
 
     # Create the main game agent
     triage_agent = Agent(
     name="Triage Game Assistant",
     instructions=traige_prompt,
-    model=model_provider.get_model(),
+    model=model,
     handoffs=[narrator_agent, monster_agent, item_agent]
 )
 

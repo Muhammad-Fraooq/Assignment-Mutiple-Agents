@@ -22,29 +22,26 @@ BASE_URL = os.getenv("BASE_URL")
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY not set in .env")
 
- # Gemini model provider
-class GeminiModelProvider(ModelProvider):
-    def __init__(self, api_key, model_name):
-        super().__init__()
-        self.api_key = api_key
-        self.model_name = model_name
-        self.client = AsyncOpenAI(
-                api_key=api_key,
-                base_url=BASE_URL
-        )
-    def get_model(self, model_name="gemini-2.0-flash"):
-        return OpenAIChatCompletionsModel(
-                model=self.model_name,
-                openai_client=self.client
-        )
-
-model_provider = GeminiModelProvider(api_key=GEMINI_API_KEY,model_name="gemini-2.0-flash")
-
-# Model config
-config = RunConfig(model=model_provider.get_model(),model_provider=model_provider,tracing_disabled=True)
-
+# Start chainlit app
 @cl.on_chat_start
 async def start():
+
+     # Reference: https://ai.google.dev/gemini-api/docs/openai
+    external_client = AsyncOpenAI(
+        api_key=GEMINI_API_KEY,
+        base_url=BASE_URL,
+    )
+
+    model = OpenAIChatCompletionsModel(
+        model="gemini-2.0-flash", openai_client=external_client
+    )
+
+    config = RunConfig(
+        model=model,
+        model_provider=external_client, # type: ignore
+        tracing_disabled=True 
+    )
+
     # Define function tool for career roadmap
     @function_tool
     def get_career_roadmap(fields: CareerField):
@@ -67,7 +64,7 @@ async def start():
     career_agent = Agent(
         name="Career Agent",
         instructions=career_prompt,
-        model=model_provider.get_model(),
+        model=model,
         tools=[get_career_roadmap],
         handoff_description="Expert in personalized career guidance and planning"
     )
@@ -75,21 +72,21 @@ async def start():
     skill_agent = Agent(
         name="Skill Agent",
         instructions=skill_prompt,
-        model=model_provider.get_model(),
+        model=model,
         handoff_description="Skill-building expert offering learning roadmaps and tools"
     )
 
     job_agent = Agent(
         name="Job Agent",
         instructions=job_prompt,
-        model=model_provider.get_model(),
+        model=model,
         handoff_description="Delivers job market insights and actionable job-seeking advice"
     )
 
     triage_agent = Agent(
         name="Triage Agent",
         instructions=triage_prompt,
-        model=model_provider.get_model(),
+        model=model,
         handoffs=[career_agent, skill_agent, job_agent]
     )
 
@@ -145,7 +142,6 @@ async def main(message: cl.Message):
                     await msg.update()
                     await asyncio.sleep(0.05)   
 
-        
         # Append assistant response to history
         history.append({"role": "assistant", "content": full_response})
 
